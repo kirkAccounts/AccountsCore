@@ -140,13 +140,28 @@ public class AccountFile {
 	public static final ByteList TYPE_SIGNIFYER = new ByteList(0xaa, 0x21, 0x5c, 0x54, 0x3a);
 	public static final ByteList USERNAME_SIGNIFYER = new ByteList(0xab, 0x21, 0x5c, 0x55, 0x3a);
 	public static final ByteList PASSWORD_SIGNIFYER = new ByteList(0xac, 0x21, 0x5c, 0x50, 0x3a);
+	/**
+	 * Signifies beginning of question and answers. if none exists, a return character (0x0a) will follow.
+	 */
+	public static final ByteList SECURITY_QUESTION_ANSWER_SIGNIFYER = new ByteList(0xac, 0x21, 0x5c, 0x51, 0x41, 0x3a);
+	public static final ByteList SECURITY_QUESTION_SIGNIFYER = new ByteList(0xac, 0x21, 0x5c, 0x51, 0x3a);
+	public static final ByteList SECURITY_ANSWER_SIGNIFYER = new ByteList(0xac, 0x21, 0x5c, 0x41, 0x3a);
+	/**
+	 * Signifies end of a question/answer entry.
+	 */
+	public static final ByteList SECUTITY_QUESTION_END_SIGNIFYER = new ByteList(0xac, 0x21, 0x5c, 0x45, 0x3a);
 	
 	public void readAccount() throws WrongFileTypeException, CorruptFileException {
 		int valid = this.checkHeader();
 		if (valid == 0) {
+			try {
 			this.account.type = this.getType();
 			this.account.usernameEncripted = this.getUsername();
 			this.account.encriptedPassword = this.getPassword();
+			this.getSecurityQuestions();
+			} catch (Exception e) {
+				throw new CorruptFileException(e);
+			}
 		} else if (valid == 1) {
 			throw new WrongFileTypeException();
 		} else if (valid == 2) {
@@ -216,9 +231,71 @@ public class AccountFile {
 	}
 	
 	public String getPassword() {
-		ByteList passwordBytes = this.fileBytes.between(PASSWORD_SIGNIFYER, new ByteList(0xd3, 0x0d, 0x0a));
+		ByteList passwordBytes = this.fileBytes.between(PASSWORD_SIGNIFYER, SECURITY_QUESTION_ANSWER_SIGNIFYER);
 		String password = passwordBytes.flippedBytes().stringValues();
 		return password;
+	}
+	
+	public void getSecurityQuestions() {
+		ByteList allQuestions = this.fileBytes.between(SECURITY_QUESTION_ANSWER_SIGNIFYER, new ByteList(0xd3, 0x0d, 0x0a));
+		
+		boolean done = false;
+		while (!done) {
+			if (allQuestions.size() > 1 && allQuestions.slice(0, 4).equals(SECURITY_QUESTION_SIGNIFYER)) {
+				/*
+				 * remove question signifyer, jump to the next question, then remove all bytes
+				 * that remain in the previous question (the one we just counted)
+				 */
+				allQuestions = allQuestions.slice(5, allQuestions.size()-1);
+				/*
+				 * Now get the question and answer.
+				 */
+				ByteList questionBytes = allQuestions.slice(0, SECURITY_ANSWER_SIGNIFYER);
+				ByteList answerBytes = allQuestions.between(SECURITY_ANSWER_SIGNIFYER, SECUTITY_QUESTION_END_SIGNIFYER);
+				String question = questionBytes.flippedBytes().stringValues();
+				String answer = answerBytes.flippedBytes().stringValues();
+				this.account.securityQuestionsEncripted.put(question, answer);
+				
+				/*
+				 * done with that question so remove it from allQuestions
+				 */
+				int nextIndex = allQuestions.indexOfGroup(SECURITY_QUESTION_SIGNIFYER);
+				if (nextIndex != -1) {
+					allQuestions = allQuestions.slice(nextIndex, allQuestions.size()-1);
+				} else {
+					done = true;
+				}
+			} else {
+				done = true;
+			}
+		}
+	}
+	
+	public int numQuestions() {
+		ByteList allQuestions = this.fileBytes.between(SECURITY_QUESTION_ANSWER_SIGNIFYER, new ByteList(0xd3, 0x0d, 0x0a));
+		int count = 0;
+		boolean done = false;
+		while (!done) {
+			if (allQuestions.slice(0, 4).equals(SECURITY_QUESTION_SIGNIFYER)) {
+				count ++;
+				/*
+				 * remove question signifyer, jump to the next question, then remove all bytes
+				 * that remain in the previous question (the one we just counted)
+				 */
+				for (int i = 0; i < 5; i++) {
+					allQuestions.remove(i);
+				}
+				int nextIndex = allQuestions.indexOfGroup(SECURITY_QUESTION_SIGNIFYER);
+				if (nextIndex != -1) {
+					allQuestions = allQuestions.slice(nextIndex, allQuestions.size()-1);
+				} else {
+					done = true;
+				}
+			} else {
+				done = true;
+			}
+		}
+		return count;
 	}
 	
 	
@@ -264,9 +341,9 @@ public class AccountFile {
 	public void generateFileBytes() {
 		this.fileBytes = new ByteList();
 		this.generateHeader();
-		this.fileBytes.addRepetition(0x00, 10);
+		this.fileBytes.addRepetition(0x00, 100);
 		this.generateBody();
-		this.fileBytes.addRepetition(0x00, 10);
+		this.fileBytes.addRepetition(0x00, 100);
 		this.generateFooter();
 	}
 	
@@ -292,7 +369,9 @@ public class AccountFile {
 		this.fileBytes.addAll(this.generateTypeBytes());
 		this.fileBytes.addAll(this.generateUsernameBytes());
 		this.fileBytes.addAll(this.generatePasswordBytes());
+		this.fileBytes.addAll(this.generateSecurityQuestions());
 		this.fileBytes.addAll(0xd3, 0x0d, 0x0a);
+//		System.out.println(this.fileBytes);
 	}
 	
 	public ByteList generateTypeBytes() {
@@ -313,6 +392,23 @@ public class AccountFile {
 		ByteList ret = new ByteList();
 		ret.addAll(0xAC, 0x21, 0x5C, 0x50, 0x3A);
 		ret.addAll(ByteList.flipBytes(this.getAccount().encriptedPassword.getBytes()));
+		return ret;
+	}
+	
+	public ByteList generateSecurityQuestions() {
+		ByteList ret = new ByteList();
+		ret.addAll(0xAC, 0x21, 0x5C, 0x51, 0x41, 0x3A);
+		if (this.account.securityQuestionsEncripted.size() == 0) {
+			ret.add(0x0a);
+		} else {
+			for (String question : this.account.securityQuestionsEncripted.keySet()) {
+				ret.addAll(0xAC, 0x21, 0x5C, 0x51, 0x3A);
+				ret.addAll(new ByteList(question.getBytes()).flippedBytes());
+				ret.addAll(0xAC, 0x21, 0x5C, 0x41, 0x3A);
+				ret.addAll(new ByteList(this.account.securityQuestionsEncripted.get(question).getBytes()).flippedBytes());
+				ret.addAll(new ByteList(0xac, 0x21, 0x5c, 0x45, 0x3a));
+			}
+		}
 		return ret;
 	}
 	

@@ -20,4 +20,8 @@ public class CorruptFileException extends IOException {
 	public CorruptFileException() {
 		super("This cannot be read. The data may have been tampered with.");
 	}
+	
+	public CorruptFileException(Throwable e) {
+		super("This cannot be read. The data may have been tampered with.", e);
+	}
 }

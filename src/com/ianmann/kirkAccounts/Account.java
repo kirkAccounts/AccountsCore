@@ -39,6 +39,33 @@ public class Account {
 		return Decriptions.decript(this.encriptedPassword);
 	}
 	
+	public void encriptSecurityQuestions() {
+		for (String question : this.securityQuestionsEncripted.keySet()) {
+			this.securityQuestionsEncripted.put(Encriptions.encript(question), Encriptions.encript(this.securityQuestionsEncripted.get(question)));
+			this.securityQuestionsEncripted.remove(question);
+		}
+	}
+	
+	public HashMap<String, String> getDecriptedSecurityQuestions() {
+		HashMap<String, String> decriptedSecurityQuestions = new HashMap<String, String>();
+		for (String question : this.securityQuestionsEncripted.keySet()) {
+			decriptedSecurityQuestions.put(Decriptions.decript(question), Decriptions.decript(this.securityQuestionsEncripted.get(question)));
+		}
+		return decriptedSecurityQuestions;
+	}
+	
+	public void addDecriptedSecurityQuestion(String question, String answer) {
+		this.securityQuestionsEncripted.put(Encriptions.encript(question), Encriptions.encript(answer));
+	}
+	
+	public void removeQuestion(String question) {
+		for (String questionEncripted : this.securityQuestionsEncripted.keySet()) {
+			if (Decriptions.decript(questionEncripted).equals(question)) {
+				this.securityQuestionsEncripted.remove(questionEncripted);
+			}
+		}
+	}
+	
 	/**
 	 * Meant to be instantiated when an account is null.
 	 */

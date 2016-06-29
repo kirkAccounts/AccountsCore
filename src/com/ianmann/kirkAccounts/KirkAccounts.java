@@ -41,14 +41,14 @@ public final class KirkAccounts {
 
 		validate();
 		
-		AccountFile acctFile = AccountFile.readAccountFile(args[0]);
-		acctFile.getAccount().type = "Google";
-		acctFile.getAccount().encriptedPassword = "hahahahaha";
-		acctFile.save();
-		AccountFile f = AccountFile.readAccountFile(args[0]);
-		System.out.println(f.getAccount().type);
-		System.out.println(f.getAccount().usernameEncripted);
-		System.out.println(f.getAccount().encriptedPassword);
+		AccountFile acctFile = AccountFile.readAccountFile("C:/Users/Ian/Desktop/accounts/test3.acct");
+//		acctFile.getAccount().type = "Google";
+//		acctFile.getAccount().encriptedPassword = "hahahahaha";
+//		acctFile.getAccount().addDecriptedSecurityQuestion("What's your first name", "Ian");
+//////		acctFile.getAccount().addDecriptedSecurityQuestion("What's your last name", "Kirkpatrick");
+//		acctFile.save();
+//		System.out.println(acctFile.getAccount().getDecriptedSecurityQuestions());
+		AccountFile acctFile2 = AccountFile.readAccountFile("test.acct");
 	}
 	
 	public static void validate() {
