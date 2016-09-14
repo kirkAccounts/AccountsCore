@@ -4,7 +4,7 @@
  * @author Ian
  * Created: May 27, 2016
  */
-package com.ianmann.kirkAccounts.errors;
+package com.ianmann.accounts.errors;
 
 import java.io.IOException;
 

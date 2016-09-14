@@ -4,13 +4,13 @@
  * @author Ian
  * Created: May 23, 2016
  */
-package com.ianmann.kirkAccounts;
+package com.ianmann.accounts;
 
 import java.io.IOException;
 
 import javax.swing.JOptionPane;
 
-import com.ianmann.kirkAccounts.files.AccountFile;
+import com.ianmann.accounts.files.AccountFile;
 
 /**
  * @TODO: Main class. No instantiation.

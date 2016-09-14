@@ -4,12 +4,12 @@
  * @author Ian
  * Created: May 23, 2016
  */
-package com.ianmann.kirkAccounts;
+package com.ianmann.accounts;
 
 import java.util.HashMap;
 
-import iansLibrary.security.Decriptions;
-import iansLibrary.security.Encriptions;
+import com.ianmann.utils.security.Decriptions;
+import com.ianmann.utils.security.Encriptions;
 
 /**
  * @TODO: TODO

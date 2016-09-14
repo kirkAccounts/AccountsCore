@@ -4,7 +4,7 @@
  * @author Ian
  * Created: May 23, 2016
  */
-package com.ianmann.kirkAccounts.files;
+package com.ianmann.accounts.files;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -15,11 +15,10 @@ import java.nio.file.FileAlreadyExistsException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import com.ianmann.kirkAccounts.Account;
-import com.ianmann.kirkAccounts.errors.CorruptFileException;
-import com.ianmann.kirkAccounts.errors.WrongFileTypeException;
-
-import iansLibrary.data.structures.ByteList;
+import com.ianmann.accounts.Account;
+import com.ianmann.accounts.errors.CorruptFileException;
+import com.ianmann.accounts.errors.WrongFileTypeException;
+import com.ianmann.utils.data.structures.ByteList;
 
 /**
  * <p>@TODO: Make functionality to read the file
